@@ -1,0 +1,44 @@
+{
+  "name": "@janis.me/ui",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts"
+    ]
+  },
+  "main": "src/main.ts",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/montserrat": "catalog:frontend",
+    "@janis.me/calc": "workspace:*",
+    "@janis.me/react-themed": "catalog:frontend",
+    "@janis.me/ui": "catalog:frontend",
+    "clsx": "catalog:frontend",
+    "include-media": "catalog:frontend",
+    "react": "catalog:frontend",
+    "react-dom": "catalog:frontend",
+    "sanitize.css": "catalog:frontend",
+    "zustand": "catalog:frontend"
+  },
+  "devDependencies": {
+    "@janis.me/linter-config": "workspace:*",
+    "@janis.me/typescript-config": "workspace:*",
+    "@types/react": "catalog:types",
+    "@types/react-dom": "catalog:types",
+    "@vitejs/plugin-react": "catalog:build",
+    "sass": "catalog:build",
+    "typescript": "catalog:build",
+    "vite": "catalog:build",
+    "vite-plugin-wasm": "catalog:build"
+  }
+}

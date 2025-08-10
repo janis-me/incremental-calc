@@ -1,0 +1,30 @@
+[package]
+name = "calc"
+version = "0.1.0"
+authors = ["Janis Jansen <oss@janis.me>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.84"
+depends = "0.11.0"
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.34"
+
+[patch.crates-io]
+depends = { git="https://github.com/janis-me/depends-rs", branch="fix/export-diagnostics-visitor" }
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O2"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+lto = true

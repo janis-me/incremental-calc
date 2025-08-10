@@ -1,0 +1,20 @@
+{
+  "name": "@janis.me/calc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/calc.js",
+  "types": "dist/calc.d.ts",
+  "files": [
+    "dist/calc_bg.wasm",
+    "dist/calc.js",
+    "dist/calc_bg.js",
+    "dist/calc.d.ts"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --out-dir ./dist --scope janis.me"
+  },
+  "devDependencies": {
+    "wasm-pack": "^0.13.1"
+  }
+}

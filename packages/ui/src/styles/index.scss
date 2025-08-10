@@ -1,0 +1,81 @@
+@use '@fontsource-variable/montserrat';
+@use 'sanitize.css';
+
+@use './globals' as *;
+
+@include apply();
+
+html {
+  font-size: 16px;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: themed('color-background');
+  color: themed('color-text-primary');
+  position: relative;
+}
+
+* {
+  font-family: 'JetBrains Mono Variable', 'IBM Plex Mono', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+a {
+  color: themed('color-interactive');
+  text-decoration: underline;
+
+  &:has(button),
+  &:has(h1) {
+    color: themed('color-text-primary');
+    text-decoration: none;
+  }
+}
+
+code {
+  padding: 0 themed('size-4');
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+input,
+button,
+select {
+  color: themed('color-text-primary');
+}
+
+p {
+  text-wrap: pretty;
+}
+
+hr {
+  margin: themed('size-5') themed('size-6');
+  border: none;
+  border-top: 1px solid themed('color-border-light');
+}
+
+label {
+  color: themed('color-text-tertiary');
+}
+
+ul li {
+  padding: themed('size-4') 0;
+}
+
+@include media('<=tablet') {
+  html {
+    font-size: 14px;
+  }
+}
+
+@include media('<=phone') {
+  html {
+    font-size: 12px;
+  }
+}

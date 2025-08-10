@@ -5,6 +5,7 @@
   "prettier.ignorePath": ".prettierignore",
   "prettier.configPath": ".prettierrc",
   "files.eol": "\n",
+  "rust-analyzer.linkedProjects": ["./packages/calc/Cargo.toml"],
   "eslint.workingDirectories": [{ "mode": "auto" }],
   "eslint.useFlatConfig": true,
   // Enable if you have issues with the eslint plugin
