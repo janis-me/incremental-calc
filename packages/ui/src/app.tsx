@@ -7,11 +7,22 @@ export default function App() {
   return (
     <div className="app">
       <h1>Incremental Graph Calc</h1>
-      <ul>
-        <li>Value: {runResult.value}</li>
-        <li>Visited: {runResult.visited.join(', ')}</li>
-        <li>Recalculated: {runResult.recalculated.join(', ')}</li>
-      </ul>
+      <p>Result:</p>
+      <pre>
+        {JSON.stringify(
+          {
+            nodesProcessed: runResult.nodes_processed,
+            durationMs: runResult.duration_ms,
+            iterations: runResult.iterations,
+            outputValue: runResult.output_value,
+            firstError: runResult.first_error ? runResult.first_error.toString() : null,
+            errorNode: runResult.error_node ? runResult.error_node.toString() : null,
+            aborted: runResult.aborted,
+          },
+          null,
+          2,
+        )}
+      </pre>
     </div>
   );
 }
