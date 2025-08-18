@@ -1,139 +1,67 @@
-use core::panic;
-use std::{hash::Hash, vec};
-
-use neal::{ComputationStats, DerivedNode, Graph, GraphError, InputNode, Operation, OutputNode};
-
-use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-#[derive(Clone, PartialEq, Debug)]
-struct NumberVector(Vec<f32>);
-
-impl Hash for NumberVector {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        for num in &self.0 {
-            num.to_bits().hash(state);
-        }
-    }
+fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
 }
 
-struct Add;
-impl Operation<(NumberVector, NumberVector), NumberVector> for Add {
-    fn execute(&self, inputs: &[&dyn neal::Value]) -> Result<NumberVector, GraphError> {
-        let a = inputs[0]
-            .as_any()
-            .downcast_ref::<NumberVector>()
-            .ok_or_else(|| GraphError::InvalidOperation("Expected NumberVector".into()))?;
-        let b = inputs[1]
-            .as_any()
-            .downcast_ref::<NumberVector>()
-            .ok_or_else(|| GraphError::InvalidOperation("Expected NumberVector".into()))?;
-        if a.0.len() != b.0.len() {
-            return Err(GraphError::InvalidOperation(
-                "Mismatched vector lengths".into(),
-            ));
-        }
-        let result = a.0.iter().zip(&b.0).map(|(x, y)| x + y).collect();
-        Ok(NumberVector(result))
-    }
+fn set_timeout(f: &Closure<dyn FnMut()>, timeout: i32) {
+    window()
+        .set_timeout_with_callback_and_timeout_and_arguments_0(f.as_ref().unchecked_ref(), timeout)
+        .expect("should register `setTimeout` OK");
 }
 
-struct Multiply;
-impl Operation<(NumberVector, NumberVector), NumberVector> for Multiply {
-    fn execute(&self, inputs: &[&dyn neal::Value]) -> Result<NumberVector, GraphError> {
-        let a = inputs[0]
-            .as_any()
-            .downcast_ref::<NumberVector>()
-            .ok_or_else(|| GraphError::InvalidOperation("Expected NumberVector".into()))?;
-        let b = inputs[1]
-            .as_any()
-            .downcast_ref::<NumberVector>()
-            .ok_or_else(|| GraphError::InvalidOperation("Expected NumberVector".into()))?;
-        if a.0.len() != b.0.len() {
-            return Err(GraphError::InvalidOperation(
-                "Mismatched vector lengths".into(),
-            ));
-        }
-        let result = a.0.iter().zip(&b.0).map(|(x, y)| x * y).collect();
-        Ok(NumberVector(result))
-    }
+fn document() -> web_sys::Document {
+    window()
+        .document()
+        .expect("should have a document on window")
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum ComputationError {
-    NodeNotFound(String),
-    InvalidOperation(String),
-    ComputationError(String),
+fn body() -> web_sys::HtmlElement {
+    document().body().expect("document should have a body")
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct ComputeResult {
-    pub nodes_processed: usize,
-    pub duration_ms: f64,
-    pub iterations: u32,
-    pub output_value: Vec<f32>,
-    pub first_error: Option<ComputationError>,
-    pub error_node: Option<u64>,
-    pub aborted: bool,
-}
-
+// This function is automatically invoked after the Wasm module is instantiated.
 #[wasm_bindgen(start)]
-pub fn init() {
-    console_error_panic_hook::set_once();
-}
+fn run() -> Result<(), JsValue> {
+    // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
+    // number of times. After it's done we want all our resources cleaned up. To
+    // achieve this we're using an `Rc`. The `Rc` will eventually store the
+    // closure we want to execute on each frame, but to start out it contains
+    // `None`.
+    //
+    // After the `Rc` is made we'll actually create the closure, and the closure
+    // will reference one of the `Rc` instances. The other `Rc` reference is
+    // used to store the closure, request the first frame, and then is dropped
+    // by this function.
+    //
+    // Inside the closure we've got a persistent `Rc` reference, which we use
+    // for all future iterations of the loop
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
 
-#[wasm_bindgen]
-pub fn run() -> JsValue {
-    let res = execute_graph();
+    let mut i = 0;
+    *g.borrow_mut() = Some(Closure::new(move || {
+        if i > 300 {
+            body().set_text_content(Some("All done!"));
 
-    match res {
-        Ok(compute_stats) => {
-            match compute_stats
-                .output_value
-                .as_ref()
-                .and_then(|val| val.as_any().downcast_ref::<NumberVector>())
-            {
-                Some(output_vector) => {
-                    log(&format!("Output: {:?}", output_vector.0));
-                    let res = ComputeResult {
-                        nodes_processed: compute_stats.nodes_processed,
-                        duration_ms: compute_stats.duration_ms,
-                        iterations: compute_stats.iterations,
-                        output_value: output_vector.0.clone(),
-                        first_error: compute_stats
-                            .first_error
-                            .map(|e| ComputationError::ComputationError(e.to_string())),
-                        error_node: compute_stats.error_node.map(|id| id.0),
-                        aborted: compute_stats.aborted,
-                    };
-
-                    serde_wasm_bindgen::to_value(&res).unwrap()
-                }
-                None => {
-                    panic!("Output is not a NumberVector");
-                }
-            }
+            // Drop our handle to this closure so that it will get cleaned
+            // up once we return.
+            let _ = f.borrow_mut().take();
+            return;
         }
-        Err(err) => panic!("Graph computation failed: {}", err.to_string()),
-    }
-}
 
-fn execute_graph() -> Result<ComputationStats, GraphError> {
-    let mut graph = Graph::new();
+        // Set the body's text content to how many times this
+        // setTimeout callback has fired.
+        i += 1;
+        let text = format!("setTimeout has been called {} times.", i);
+        body().set_text_content(Some(&text));
 
-    // Build a simple computation: (5 + 3) * 2 using new API
-    let a = graph.add_node(InputNode::new(NumberVector(vec![5.0, 3.0])));
-    let b = graph.add_node(InputNode::new(NumberVector(vec![3.0, 3.0])));
-    let c = graph.add_node(InputNode::new(NumberVector(vec![2.0, 2.0])));
+        // Schedule ourself for another setTimeout callback.
+        set_timeout(f.borrow().as_ref().unwrap(), 1_000);
+    }));
 
-    let sum1 = graph.add_node(DerivedNode::new(vec![a.id(), b.id()], Add));
-    let sum2 = graph.add_node(DerivedNode::new(vec![sum1.id(), c.id()], Multiply));
-    let _output: neal::NodeHandle<NumberVector> = graph.add_node(OutputNode::new(sum2.id()));
-
-    graph.compute()
+    set_timeout(g.borrow().as_ref().unwrap(), 1_000);
+    Ok(())
 }
