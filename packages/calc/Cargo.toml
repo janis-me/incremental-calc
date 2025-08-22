@@ -8,12 +8,18 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+neal = { path = "../../../neal/neal" }
 wasm-bindgen = "0.2.84"
-serde = { version = "1.0", features = ["derive"] }
-serde-wasm-bindgen = "0.4"
 console_error_panic_hook = { version = "0.1.7", optional = true }
-neal = {path = "../../../neal"}
-web-sys = { version = "0.3", features = ["Document", "Element", "HtmlElement", "Node", "Window"] }
+web-sys = { version = "0.3", features = [
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Node",
+  "Window",
+] }
+js-sys = "0.3.77"
+chrono = "0.4.11"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"

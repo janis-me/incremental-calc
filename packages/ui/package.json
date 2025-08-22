@@ -23,6 +23,7 @@
     "@janis.me/calc": "workspace:*",
     "@janis.me/react-themed": "catalog:frontend",
     "@janis.me/ui": "catalog:frontend",
+    "@xyflow/react": "^12.8.4",
     "clsx": "catalog:frontend",
     "include-media": "catalog:frontend",
     "react": "catalog:frontend",
